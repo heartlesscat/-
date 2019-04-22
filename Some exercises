@@ -1,0 +1,241 @@
+1. (1)python下多线程的限制以及多进程中传递参数的方式
+　　python多线程有个全局解释器锁（global interpreter lock），这个锁的意思是任一时间只能有一个线程使用解释器，跟单cpu跑多个程序一个意思，大家都是轮着用的，这叫“并发”，不是“并行”。
+　　多进程间共享数据，可以使用 multiprocessing.Value 和 multiprocessing.Array
+　 (2)python多线程与多进程的区别　　
+在UNIX平台上，当某个进程终结之后，该进程需要被其父进程调用wait，否则进程成为僵尸进程(Zombie)。所以，有必要对每个Process对象调用join()方法 (实际上等同于wait)。对于多线程来说，由于只有一个进程，所以不存在此必要性。
+多进程应该避免共享资源。在多线程中，我们可以比较容易地共享资源，比如使用全局变量或者传递参数。在多进程情况下，由于每个进程有自己独立的内存空间，以上方法并不合适。此时我们可以通过共享内存和Manager的方法来共享资源。但这样做提高了程序的复杂度，并因为同步的需要而降低了程序的效率。
+2.Python是如何进行内存管理的？
+　　http://developer.51cto.com/art/201007/213585.htm
+　　Python引用了一个内存池(memory pool)机制，即Pymalloc机制(malloc:n.分配内存)，用于管理对小块内存的申请和释放
+内存池（memory pool）的概念：
+　　当 创建大量消耗小内存的对象时，频繁调用new/malloc会导致大量的内存碎片，致使效率降低。内存池的概念就是预先在内存中申请一定数量的，大小相等 的内存块留作备用，当有新的内存需求时，就先从内存池中分配内存给这个需求，不够了之后再申请新的内存。这样做最显著的优势就是能够减少内存碎片，提升效率。
+内存池的实现方式有很多，性能和适用范围也不一样。 
+python中的内存管理机制——Pymalloc：
+　　python中的内存管理机制都有两套实现，一套是针对小对象，就是大小小于256bits时,pymalloc会在内存池中申请内存空间；当大于256bits，则会直接执行new/malloc的行为来申请内存空间。
+　　关于释放内存方面，当一个对象的引用计数变为0时，python就会调用它的析构函数。在析构时，也采用了内存池机制，从内存池来的内存会被归还到内存池中，以避免频繁地释放动作。
+
+3.什么是lambda函数？它有什么好处?
+　　http://www.kuqin.com/diveinto_python_document/apihelper_lambda.html
+　　lambda 函数是一个可以接收任意多个参数(包括可选参数)并且返回单个表达式值的函数。 lambda 函数不能包含命令，它们所包含的表达式不能超过一个。不要试图向lambda 函数中塞入太多的东西；如果你需要更复杂的东西，应该定义一个普通函数，然后想让它多长就多长。
+
+4.如何用Python输出一个Fibonacci数列？
+1 a,b = 0, 1
+2 while b<100:
+3     print (b),
+4     a, b = b, a+b
+
+5.介绍一下Python中webbrowser的用法？
+webbrowser模块提供了一个高级接口来显示基于Web的文档，大部分情况下只需要简单的调用open()方法。
+webbrowser定义了如下的异常：
+exception webbrowser.Error, 当浏览器控件发生错误是会抛出这个异常
+webbrowser有以下方法：
+webbrowser.open(url[, new=0[, autoraise=1]])
+这个方法是在默认的浏览器中显示url, 如果new = 0, 那么url会在同一个浏览器窗口下打开，如果new = 1, 会打开一个新的窗口，如果new = 2, 会打开一个新的tab, 如果autoraise ＝ true, 窗口会自动增长。
+webbrowser.open_new(url)
+在默认浏览器中打开一个新的窗口来显示url, 否则，在仅有的浏览器窗口中打开url
+webbrowser.open_new_tab(url)
+在默认浏览器中当开一个新的tab来显示url, 否则跟open_new()一样
+webbrowser.get([name]) 根据name返回一个浏览器对象，如果name为空，则返回默认的浏览器
+webbrowser.register(name, construtor[, instance])
+注册一个名字为name的浏览器，如果这个浏览器类型被注册就可以用get()方法来获取。
+
+6.解释一下python的and-or语法
+http://www.kuqin.com/diveinto_python_document/apihelper_andor.html
+与C表达式 bool ? a : b类似，但是bool and a or b，当 a 为假时，不会象C表达式 bool ? a : b 一样工作
+应该将 and-or 技巧封装成一个函数：
+def choose(bool, a, b):
+    return (bool and [a] or [b])[0]
+因为 [a] 是一个非空列表，它永远不会为假。甚至 a 是 0 或 '' 或其它假值，列表[a]为真，因为它有一个元素。
+
+7.how do I iterate over a sequence in reverse order
+for x in reversed(sequence):
+    ... # do something with x..
+如果不是list, 最通用但是稍慢的解决方案是：
+for i in range(len(sequence)-1, -1, -1):
+    x = sequence[i]
+    <do something with x>
+
+8.Python是如何进行类型转换的？
+http://canofy.iteye.com/blog/298263
+
+ 1 函数                      描述
+ 2 int(x [,base ])         将x转换为一个整数
+ 3 long(x [,base ])        将x转换为一个长整数
+ 4 float(x )               将x转换到一个浮点数
+ 5 complex(real [,imag ])  创建一个复数
+ 6 str(x )                 将对象 x 转换为字符串
+ 7 repr(x )                将对象 x 转换为表达式字符串
+ 8 eval(str )              用来计算在字符串中的有效Python表达式,并返回一个对象
+ 9 tuple(s )               将序列 s 转换为一个元组
+10 list(s )                将序列 s 转换为一个列表
+11 chr(x )                 将一个整数转换为一个字符
+12 unichr(x )              将一个整数转换为Unicode字符
+13 ord(x )                 将一个字符转换为它的整数值
+14 hex(x )                 将一个整数转换为一个十六进制字符串
+15 oct(x )                 将一个整数转换为一个八进制字符串
+
+ 
+9.Python里面如何实现tuple和list的转换？
+1 >>> l = tuple(iplist)
+2 >>> print l
+3 ('217.169.209.2:6666', '192.227.139.106:7808', '110.4.12.170:83', '69.197.132.80:7808', '205.164.41.101:3128', '63.141.249.37:8089', '27.34.142.47:9090')
+4 >>> t = list(l)
+5 >>> print t
+6 ['217.169.209.2:6666', '192.227.139.106:7808', '110.4.12.170:83', '69.197.132.80:7808', '205.164.41.101:3128', '63.141.249.37:8089', '27.34.142.47:9090']
+
+10.请写出一段Python代码实现删除一个list里面的重复元素
+
+1 >>> l = [1,1,2,3,4,5,4]
+2 >>> list(set(l))
+3 [1, 2, 3, 4, 5]
+4 或者
+5 d = {}
+6 for x in mylist:
+7     d[x] = 1
+8 mylist = list(d.keys())
+
+
+11.Python如何实现单例模式？其他23种设计模式python如何实现？
+
+ 1 #使用__metaclass__（元类）的高级python用法  
+ 2 class Singleton2(type):  
+ 3     def __init__(cls, name, bases, dict):  
+ 4         super(Singleton2, cls).__init__(name, bases, dict)  
+ 5         cls._instance = None  
+ 6     def __call__(cls, *args, **kw):  
+ 7         if cls._instance is None:  
+ 8             cls._instance = super(Singleton2, cls).__call__(*args, **kw)  
+ 9         return cls._instance  
+10  
+11 class MyClass3(object):  
+12     __metaclass__ = Singleton2  
+13  
+14 one = MyClass3()  
+15 two = MyClass3()  
+16  
+17 two.a = 3  
+18 print one.a  
+19 #3  
+20 print id(one)  
+21 #31495472  
+22 print id(two)  
+23 #31495472  
+24 print one == two  
+25 #True  
+26 print one is two  
+27 #True  
+
+ 
+
+ 1 #使用装饰器(decorator),  
+ 2 #这是一种更pythonic,更elegant的方法,  
+ 3 #单例类本身根本不知道自己是单例的,因为他本身(自己的代码)并不是单例的  
+ 4 def singleton(cls, *args, **kw):  
+ 5     instances = {}  
+ 6     def _singleton():  
+ 7         if cls not in instances:  
+ 8             instances[cls] = cls(*args, **kw)  
+ 9         return instances[cls]  
+10     return _singleton  
+11  
+12 @singleton  
+13 class MyClass4(object):  
+14     a = 1  
+15     def __init__(self, x=0):  
+16         self.x = x  
+17  
+18 one = MyClass4()  
+19 two = MyClass4()  
+20  
+21 two.a = 3  
+22 print one.a  
+23 #3  
+24 print id(one)  
+25 #29660784  
+26 print id(two)  
+27 #29660784  
+28 print one == two  
+29 #True  
+30 print one is two  
+31 #True  
+32 one.x = 1  
+33 print one.x  
+34 #1  
+35 print two.x  
+36 #1  
+
+
+12.Python里面如何拷贝一个对象？
+http://blog.csdn.net/sharkw/article/details/1934090
+标准库中的copy模块提供了两个方法来实现拷贝.一个方法是copy,它返回和参数包含内容一样的对象.
+使用deepcopy方法,对象中的属性也被复制
+
+13.介绍一下except的用法和作用？
+Python的except用来捕获所有异常，因为Python里面的每次错误都会抛出一个异常，所以每个程序的错误都被当作一个运行时错误。
+
+14.Python中pass语句的作用是什么？
+pass语句什么也不做，一般作为占位符或者创建占位程序，pass语句不会执行任何操作
+
+15.如何知道一个python对象的类型？
+type()
+
+16.介绍一下Python下range()函数的用法？
+http://docs.python.org/library/functions.html#range
+range(start, stop[, step])
+
+17.如何用Python来进行查询和替换一个文本字符串？
+可以使用sub()方法来进行查询和替换，sub方法的格式为：sub(replacement, string[, count=0])
+replacement是被替换成的文本
+string是需要被替换的文本
+count是一个可选参数，指最大被替换的数量
+
+18.Python里面search()和match()的区别？
+match()函数只检测RE是不是在string的开始位置匹配，search()会扫描整个string查找匹配, 也就是说match()只有在0位置匹配成功的话才有返回，如果不是开始位置匹配成功的话，match()就返回none
+
+19.用Python匹配HTML tag的时候，<.*>和<.*?>有什么区别？
+前者是贪婪匹配，会从头到尾匹配 <a>xyz</a>，而后者是非贪婪匹配，只匹配到第一个 >。
+
+20.Python里面如何生成随机数？
+import random
+random.random()
+它会返回一个随机的0和1之间的浮点数
+
+21.如何用Python来发送邮件？
+python实现发送和接收邮件功能主要用到poplib和smtplib模块。
+poplib用于接收邮件，而smtplib负责发送邮件。
+代码如下:
+
+ 1 #! /usr/bin/env python
+ 2 #coding=utf-8
+ 3 import sys 
+ 4 import time 
+ 5 import poplib 
+ 6 import smtplib 
+ 7 #邮件发送函数
+ 8 def send_mail(): 
+ 9      try: 
+10         handle = smtplib.SMTP('smtp.126.com',25) 
+11         handle.login('XXXX@126.com','**********') 
+12         msg = 'To: XXXX@qq.com\r\nFrom:XXXX@126.com\r\nSubject:hello\r\n'
+13         handle.sendmail('XXXX@126.com','XXXX@qq.com',msg) 
+14         handle.close() 
+15         return 1
+16     except: 
+17         return 0
+18 #邮件接收函数
+19 def accpet_mail(): 
+20     try: 
+21         p=poplib.POP3('pop.126.com') 
+22         p.user('pythontab@126.com') 
+23         p.pass_('**********') 
+24         ret = p.stat() #返回一个元组:(邮件数,邮件尺寸) 
+25        #p.retr('邮件号码')方法返回一个元组:(状态信息,邮件,邮件尺寸)   
+26     except poplib.error_proto,e: 
+27         print "Login failed:",e 
+28         sys.exit(1)
+29     
+30 #运行当前文件时，执行sendmail和accpet_mail函数
+31 if __name__ == "__main__": 
+32     send_mail() 
+33     accpet_mail()
+
